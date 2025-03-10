@@ -7,8 +7,6 @@ from .models import (
     Item,
     Purchase
 )
-
-import requests
 from datetime import datetime, timedelta
 from config import LOLZ_TOKEN
 
