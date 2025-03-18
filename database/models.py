@@ -15,7 +15,6 @@ class Category(Base):
     desc = mapped_column(String)
     price = mapped_column(Integer)
     image_url = mapped_column(String, nullable=True)
-    # Связь с товарами
     items = relationship('Item', back_populates='category')
     
     # Связь с покупками
