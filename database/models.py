@@ -1,4 +1,4 @@
-from sqlalchemy import String, Integer, ForeignKey, select
+from sqlalchemy import String, Integer, ForeignKey, select, Boolean
 from sqlalchemy.orm import DeclarativeBase, mapped_column, relationship
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 
@@ -14,7 +14,7 @@ class Category(Base):
     name = mapped_column(String, unique=True)
     desc = mapped_column(String)
     price = mapped_column(Integer)
-    
+    image_url = mapped_column(String, nullable=True)
     # Связь с товарами
     items = relationship('Item', back_populates='category')
     
@@ -36,7 +36,7 @@ class User(Base):
     __tablename__ = 'users'
     id = mapped_column(Integer, primary_key=True)
     tg_id = mapped_column(Integer) 
-    balance = mapped_column(Integer, default=100)
+    balance = mapped_column(Integer, default=0)
     total_top_up = mapped_column(Integer, default=0)
 
     purchases = relationship('Purchase', back_populates='buyer')
@@ -56,20 +56,11 @@ class Purchase(Base):
     category = relationship('Category', back_populates='purchases')
 
 
-async def init_categories():
-    async with async_session() as session:
-        # Проверяем, есть ли уже категории в таблице
-        existing_categories = await session.scalars(select(Category))
-        if not existing_categories.first():  # Если таблица пуста
-            categories = [
-                Category(name='Vkontakte', desc='Почты Вконтакте', price=10),
-                Category(name='Google', desc='Почты Google', price=1),
-                Category(name='Yandex', desc='Почты Yandex', price=12),
-                Category(name='Mail.ru', desc='Почты Mail.ru', price=8),
-                Category(name='Facebook', desc='Почты Facebook', price=20),
-            ]
-            session.add_all(categories)
-            await session.commit()
+class ProcessedPayment(Base):
+    __tablename__ = 'processed_payments'
+    id = mapped_column(Integer, primary_key=True)
+    order_id = mapped_column(String, unique=True, nullable=False)  # Уникальный идентификатор платежа
+    is_processed = mapped_column(Boolean, default=False) 
 
 
 async def async_main():
@@ -77,6 +68,5 @@ async def async_main():
         # Создаем таблицы, если они не существуют
         await conn.run_sync(Base.metadata.create_all)
         
-        # Добавляем категории, если таблица categories пуста
-        await init_categories()
+
         
